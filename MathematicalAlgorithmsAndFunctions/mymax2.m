@@ -1,0 +1,9 @@
+function [x0, m] = mymax2(A)
+[~, m] = max(A);
+idx = sub2ind(size(A), m, 1:size(A, 2));
+m1 = A(idx);
+[~, m1] = max(m1);
+x1 = m(m1);
+x2 = m1;
+x0 = [x1, x2];
+m = A(x1, x2);
