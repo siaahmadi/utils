@@ -106,37 +106,11 @@ elseif numel(refValues) == 1
 end
 
 % find indices
-idx_begin = binsearch_approx(refValues, b);
-minus_infinity = b == -Inf;
-plus_infinity = b == Inf;
-idx_begin(minus_infinity) = 1;
-idx_begin(plus_infinity) = length(refValues);
-% idx_begin elements can be negative (approximate values found), positive
-% (exact values found), or 0 (out-of-range values).
-% For positives, all good.
-% For negatives, make them positive and add an index so only least value
-% larger than b(i) will be included for idx_begin(i) < 0
-idx_begin(idx_begin<0) = abs(idx_begin(idx_begin<0))+1;
-% For out-of-range values set them to 1 only if they fall to the left of
-% the refValues:
-ilt = b(idx_begin==0)<refValues(1); % ilt==index of less-than
-idx_begin(ilt) = 1;
+idx_begin = abs(binsearch_approx(b, refValues));
 
-idx_end = abs(binsearch_approx(refValues, e, 1));
-minus_infinity = e == -Inf;
-plus_infinity = e == Inf;
-idx_end(minus_infinity) = 1;
-idx_end(plus_infinity) = length(refValues);
-% in a similar fashion to idx_begin, only set those idx_end's that are to the right of
-% refValues:
-igt = e(idx_end==0)>refValues(end); % igt==index of greater-than
-idx_end(igt) = length(refValues);
+idx_end = binsearch_approx(e, refValues);
+idx_end(idx_end<0) = abs(idx_end(idx_end<0)) + 1;
 
-for i = 1:length(idx_begin)
-	if idx_begin(i) > 0 && idx_end(i) > 0 && idx_end(i) >= idx_begin(i) % if binsearch_approx's return values are valid indices (i.e. keys found)
-		inlineIdx(idx_begin(i):idx_end(i)) = true;
-		if make_idx
-			idx{i}(idx_begin(i):idx_end(i)) = true;
-		end
-	end
-end
+idx = arrayfun(@(i) idx_begin == idx_end & idx_begin == i, [1:length(b)]', 'un', 0);
+
+inlineIdx = sum(cat(1, idx{:})) > 0;

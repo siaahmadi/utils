@@ -15,7 +15,9 @@ if notSorted
 end
 idx = obj.restrict(numericArray, true);
 if notSorted
-	idx = cellfun(@(i) i(I), idx, 'un', 0);
+	idx = cat(1, idx{:});
+	idx = idx(:, I);
+	idx = row2cell(idx);
 end
 
 if strcmpi(idxType, 'upointer')
