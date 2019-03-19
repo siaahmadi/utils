@@ -44,13 +44,14 @@ make_idx = false;
 
 if ischar(sorted) && strcmpi(sorted, 'unsorted')
 	sorted = false;
+	% todo more...
 elseif isnumeric(sorted)
 	if exist('refValues', 'var')
-		if ~isequal(size(varargin{end}), size(refValues))
+		varargin = [{refValues}, varargin];
+		if numel(varargin{end}) == 1 && isa(varargin{end}, 'logical') && varargin{end}
 			make_idx = varargin{end};
-			varargin = varargin{1:end-1};
+			varargin = varargin(1:end-1);
 		end
-		varargin = [{refValues}, varargin{:}];
 	end
 	refValues = sorted;
 	sorted = true;
@@ -75,7 +76,7 @@ else
 end
 
 varargout = cell(size(varargin));
-for i = 1:nargin - 2 - double(~sorted)
+for i = 1:length(varargout)
 	varargout{i} = varargin{i}(inlineIdx);
 end
 
@@ -95,8 +96,12 @@ if isempty(refValues)
 elseif numel(refValues) == 1
 	if make_idx
 		idx = arrayfun(@(b, e) b <= refValues(:) & refValues(:) <= e, b, e, 'UniformOutput', false);
+		inlineIdx = sum(cat(2, idx{:}), 2)>0;
+	else
+		for i = 1:length(b)
+			inlineIdx = inlineIdx | (b(i) <= refValues(:) & refValues(:) <= e(i));
+		end
 	end
-	inlineIdx = sum(cat(2, idx{:}), 2)>0;
 	return;
 end
 

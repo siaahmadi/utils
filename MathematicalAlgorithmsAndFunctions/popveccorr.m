@@ -1,4 +1,4 @@
-function popcorr = popveccorr(popmap1, popmap2, occ1, occ2, opt)
+function [popcorr, include] = popveccorr(popmap1, popmap2, occ1, occ2, opt)
 
 % Check popmap1, popmap2 same size
 if ~isequal(size(popmap1), size(popmap2))
@@ -93,10 +93,11 @@ for i = 1:size(popmap1, 1)
 				continue;
 			end
 			buffer = corrcoef(popmap1(i,j,include), popmap2(i,j,include));
-			if isnan(buffer)
-				error('Fix this! Todo: Make corrcoef ignore the NaNs in the PVs');
+			if sum(include) < 3 % only one cell or less -- invalid correlation
+				popcorr(i, j) = NaN;
+			else
+				popcorr(i, j) = buffer(2);
 			end
-			popcorr(i, j) = buffer(2);
 		end
 	end
 end

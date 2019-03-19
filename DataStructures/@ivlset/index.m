@@ -9,13 +9,20 @@ if iscell(numericArray)
 	return;
 end
 
-idx = obj.restrict(numericArray);
+notSorted = ~issorted(numericArray);
+if notSorted
+	[numericArray, I] = sort(numericArray);
+end
+idx = obj.restrict(numericArray, true);
+if notSorted
+	idx = cellfun(@(i) i(I), idx, 'un', 0);
+end
 
 if strcmpi(idxType, 'upointer')
-	idx = cellfun(@(idx, chunkInd) double(idx)*chunkInd, idx, num2cell(1:length(idx))', 'un', 0);
+	idx = cellfun(@(idx, chunkInd) double(idx(:))*chunkInd, idx, num2cell(1:length(idx))', 'un', 0);
 	idx = sum(cat(2, idx{:}), 2);
 elseif strcmpi(idxType, 'pointer')
-	idx = cellfun(@(idx, chunkInd) double(idx)*chunkInd, idx, num2cell(1:length(idx))', 'un', 0);
+	idx = cellfun(@(idx, chunkInd) double(idx(:))*chunkInd, idx, num2cell(1:length(idx))', 'un', 0);
 elseif strcmpi(idxType, 'binidx')
 	% PASS (already in this mode)
 elseif strcmpi(idxType, 'ubinidx')

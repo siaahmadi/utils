@@ -40,7 +40,12 @@ end
 visitedDirs = visitedDirs(matchstr(visitedDirs, cateachrow(subDirectories, '|'), 'contains'));
 
 if nargin < 3 || sortDefault == 1
-	b = regexp(a, 'TT\d*_\d\d.t', 'match');
+	if isempty(a)
+		a = {''};
+		b = {''};
+	else
+		b = regexp(a, 'TT\d*_\d\d.t', 'match');
+	end
 	listOfTFiles = unique(b)';
 elseif sortDefault == 0
 	b1 = regexp(a, 'TT\d_\d\d.t', 'match');
