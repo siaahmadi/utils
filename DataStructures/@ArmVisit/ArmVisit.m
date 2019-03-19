@@ -166,10 +166,19 @@ classdef ArmVisit
 			t_ = cat(1, t_{:});
 			ivls = ivlset(t_);
 			i = ivls.index(t0);
-			if i == 0 % not found
-				visit = [];
+			if isscalar(i)
+				if i == 0 % not found
+					visit = [];
+				else
+					visit = arm_visits(i);
+				end
 			else
-				visit = arm_visits(i);
+				visit = cell(size(t0));
+				for j = 1:length(visit)
+					if i(j) > 0
+						visit{j} = arm_visits(i(j));
+					end
+				end
 			end
 		end
 	end
