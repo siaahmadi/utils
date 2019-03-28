@@ -106,11 +106,16 @@ elseif numel(refValues) == 1
 end
 
 % find indices
-idx_begin = abs(binsearch_approx(b, refValues));
+idx_begin = abs(binsearch_approx([-Inf; b(:);Inf], refValues));
+idx_begin = idx_begin-1;
 
-idx_end = binsearch_approx(e, refValues);
-idx_end(idx_end<0) = abs(idx_end(idx_end<0)) + 1;
+idx_end = binsearch_approx([-Inf; e(:); Inf], refValues);
+idx_end(idx_end>0) = idx_end(idx_end>0) - 1; % because of -Inf
+idx_end(-idx_end==length(e)+1) = 0;
+%end_neg = idx_end<0;
+%idx_end(end_neg) = idx_end(end_neg) - 1;
+idx_end = abs(idx_end);
 
 idx = arrayfun(@(i) idx_begin == idx_end & idx_begin == i, [1:length(b)]', 'un', 0);
 
-inlineIdx = sum(cat(1, idx{:})) > 0;
+inlineIdx = sum(cat(2, idx{:}), 2) > 0;

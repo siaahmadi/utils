@@ -1,4 +1,7 @@
 function masterIvl = merge(obj, varargin)
+%masterIvl = MERGE(obj, varargin)
+%
+% Combine two or more ivlset objects
 
 if nargin > 1
 	masterIvl = [obj; cat(1, varargin{:})];

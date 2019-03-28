@@ -169,7 +169,12 @@ classdef ivlset < handle
 		%% Set Operators:
 		function newObj = plus(obj, obj2) % Union of obj and obj2; if isa(obj2, 'numeric'), move interval to right
 			if isnumeric(obj2)
-				error('Not implemented yet. Only works for 2 ivlsets so far.');
+				Ivls = obj.toIvl();
+				Ivls(isnan(Ivls(:, 1)), :) = [];
+				Ivls = Ivls + obj2;
+				
+				newObj = ivlset(Ivls);
+				return
 			end
 			Ivls = obj.toIvl();
 			Ivls(isnan(Ivls(:, 1)), :) = [];
