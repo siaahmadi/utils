@@ -10,7 +10,7 @@ function out = uniform(inarray, default)
 % The output is always a double.
 
 if ~isscalar(default) && numel(default) ~= 1
-	error('The default value must be a scalar');
+	warning('The default value should be a scalar');
 end
 
 if iscell(inarray)

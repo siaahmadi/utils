@@ -51,6 +51,9 @@ classdef ivlset < handle
 
 							obj.Begin = InBegin(:);
 							obj.End = InEnd(:);
+						elseif isempty(bdr)
+							obj.Begin = [];
+							obj.End = [];
 						else % ill-sized matrix
 							error('IvlSet:Constructor:InvalidArgument:Size', 'For a numeric non-vector matrix, the argument must be either 2xM or Mx2');
 						end

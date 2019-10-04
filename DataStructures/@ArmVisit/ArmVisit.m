@@ -1,12 +1,13 @@
+% 3/26/2019
 classdef ArmVisit
 	properties
-		t_ = struct('start', 0, 'end', 0, 'reward_site_start', 0, 'reward_site_end', 0);
-		t = [];
-		x = [];
-		y = [];
-		trial = '';
-		arm = 0;
-		rank = 0;
+		t_ = struct('start', 0, 'end', 0, 'reward_site_start', 0, 'reward_site_end', 0); % Timestamp of milestones within Visit
+		t = []; % Time stamps of path tracking for the whole Visit
+		x = []; % X values of path tracking for the whole Visit
+		y = []; % Y values of path tracking for the whole Visit
+		trial = ''; % name of trial in which the Visit took place
+		arm = 0; % The arm number visited
+		rank = 0; % Rank of visit within trial
 		reward = 0; % 0 if no reward, 1 small, 2 opposite, 3 main
 	end
 	methods
@@ -41,17 +42,21 @@ classdef ArmVisit
 		end
 	end
 	methods(Static)
-		function [visit, i] = findReward(arm_visits, i_th, reward_type)
-			% returns the rank of entry into the reward arm from a list of
+		function [visit, visit_rank] = findReward(arm_visits, i_th, reward_type)
+			%[visit, i] = ArmVisit.findReward(arm_visits, i_th, reward_type)
+			% Rank of entry into the reward arm from a list of
 			% ArmVisit objects
+			% `visit` is the actual ArmVisit object
+			% `visit_rank` is the rank of the ArmVisit object in the list `arm_visits`
+
 			r = cat(1, arm_visits.reward);
-			i = find(r==reward_type, i_th);
-			if isempty(i)
-				i = 0;
+			visit_rank = find(r==reward_type, i_th);
+			if isempty(visit_rank)
+				visit_rank = 0;
 				visit = [];
 			else % this returns the last visit, regardless of if number of visits to that reward <= rank_of_entry_to_reward or not
-				i = i(end);
-				visit = arm_visits(i);
+				visit_rank = visit_rank(end);
+				visit = arm_visits(visit_rank);
 			end
 		end
 		function [t, x, y] = pathBefore(arm_visits, i_th, reward_type)
@@ -125,21 +130,57 @@ classdef ArmVisit
 			l = cat(1, arm_visits.arm);
 		end
 		function r = rankOfReward(arm_visits, reward_type)
-			r = find(ArmVisit.listVisits(arm_visits) == reward_type);
+			% Returns the rank of each entry to arm(s) with reward type `reward_type`
+			r = find(cat(1, arm_visits.reward) == reward_type);
 			if isempty(r)
 				r = 0;
 			end
 		end
-		function visits = TrialVisits(arm_visits, trials)
+		function r = rankOfFirstReward(arm_visits, reward_type)
+			% Returns the rank of first entry to arm(s) with reward type `reward_type`
+			r = find(cat(1, arm_visits.reward) == reward_type, 1);
+			if isempty(r)
+				r = 0;
+			end
+		end
+		function r = rankOfArm(arm_visits, arm_number)
+			% Returns the rank of each entry to arm `arm_number`
+			r = find(ArmVisit.listVisits(arm_visits) == arm_number);
+			if isempty(r)
+				r = 0;
+			end
+		end
+		function visits = TrialVisits(arm_visits, trials, prefix)
+			%visits = TrialVisits(arm_visits, trials, prefix)
+			% Find and return only those items in `arm_visits` with trial name listed in `trials`
+			% Results frequently passed to other functions for trial-specific information
+			% 
+			% if `prefix` is true, the check will only consider whether
+			% strings of trials (can be string or cellstr) are prefixes of
+			% `arm_vists` trial names.
+			
+			if ~exist('prefix', 'var')
+				prefix = false;
+			end
 			[visits, tr] = ArmVisit.groupTrials(arm_visits);
-			idx = ismember(tr, trials);
+			if prefix
+				idx = startsWith(tr, trials);
+			else
+				idx = ismember(tr, trials);
+			end
 			if iscell(trials)
 				visits = visits(idx);
 			else
-				visits = visits{idx};
+				if prefix
+					visits = cat(1, visits{idx});
+				else
+					visits = visits{idx};
+				end
 			end
 		end
 		function [trial_visits, trials] = groupTrials(arm_visits)
+			% Similar to `@ArmVisits.TrialVisits` except it groups each set
+			% of trials (with the same name) into a cell array
 			all_trials = {arm_visits.trial};
 			trials = unique(all_trials);
 			trials = trials(:);
@@ -152,7 +193,11 @@ classdef ArmVisit
 		function t = Target(arm_visits)
 			%t = ArmVisit.Target(arm_visits)
 			% Returns arm number of first reward==3 visit from arm_visits
+			% Used with 'begin0' to find the day's Target
 			t = ArmVisit.findReward(arm_visits, 1, 3);
+			if isempty(t)
+				error('There was no visit to a Reward-3-type arm. Did you pass all visits from the day?');
+			end
 			t = t.arm;
 		end
 		function [visit, i] = findEventArm(arm_visits, t0)

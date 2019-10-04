@@ -44,7 +44,20 @@ make_idx = false;
 
 if ischar(sorted) && strcmpi(sorted, 'unsorted')
 	sorted = false;
-	% todo more...
+	if ~isequal(size(varargin{end}), size(refValues))
+		if isscalar(varargin{end})
+			make_idx = varargin{end};
+			varargin(end) = [];
+		elseif ~isempty(varargin{end})
+			error('Invalid input arguments found following refValues');
+		end
+	end
+	sz = cellfun(@size, varargin, 'un', 0);
+	if ~isempty(varargin)
+		if ~isequaln(size(refValues), sz{:})
+			error('Invalid input arguments found following refValues');
+		end
+	end
 elseif isnumeric(sorted)
 	if exist('refValues', 'var')
 		varargin = [{refValues}, varargin];
@@ -71,8 +84,16 @@ end
 if sorted
 	[inlineIdx, idx] = findStartEnd(refValues, b, e, make_idx);
 else
-	idx = arrayfun(@(b, e) b <= refValues(:) & refValues(:) <= e, b, e, 'UniformOutput', false);
-	inlineIdx = sum(cat(2, idx{:}), 2)>0;
+	if make_idx
+		idx = arrayfun(@(b, e) b <= refValues(:) & refValues(:) <= e, b, e, 'UniformOutput', false);
+		inlineIdx = sum(cat(2, idx{:}), 2)>0;
+	else
+		idx = [];
+		inlineIdx = true(size(refValues(:)));
+		for i = 1:length(b)
+			inlineIdx = inlineIdx & b(i) <= refValues(:) & refValues(:) <= e(i);
+		end
+	end
 end
 
 varargout = cell(size(varargin));
@@ -116,6 +137,10 @@ idx_end(-idx_end==length(e)+1) = 0;
 %idx_end(end_neg) = idx_end(end_neg) - 1;
 idx_end = abs(idx_end);
 
-idx = arrayfun(@(i) idx_begin == idx_end & idx_begin == i, [1:length(b)]', 'un', 0);
-
-inlineIdx = sum(cat(2, idx{:}), 2) > 0;
+inlineIdx = false(size(idx_begin));
+for i = 1:length(b)
+	if make_idx
+		idx{i} = idx_begin == idx_end & idx_begin == i;
+	end
+	inlineIdx = inlineIdx | idx_begin == idx_end & idx_begin == i;
+end

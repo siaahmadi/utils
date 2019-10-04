@@ -4,6 +4,11 @@ if ~exist('treatEnds', 'var')
 	treatEnds = false;
 end
 
+if isempty(logicalArray)
+	L = logicalArray;
+	return;
+end
+
 if ~treatEnds
 	logicalArray = [~logicalArray(1) logicalArray ~logicalArray(end)];
 	L = ~lau.dilate(~logicalArray, by);

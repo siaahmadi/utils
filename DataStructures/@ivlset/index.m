@@ -4,6 +4,11 @@ if ~exist('idxType', 'var') || isempty(idxType)
 	idxType = 'upointer';
 end
 
+idx = [];
+if nargin < 2
+	return;
+end
+
 if iscell(numericArray)
 	idx = cellfun(@(numArr) obj.index(numArr, idxType), numericArray, 'un', 0);
 	return;

@@ -1,4 +1,4 @@
-function rad8outline(mazecolor, linestyle)
+function h = rad8outline(mazecolor, linestyle)
 
 maze = dataanalyzer.env.rad8.radial8maze(8, 'line');
 if ~exist('mazecolor', 'var')
@@ -12,9 +12,9 @@ if exist('linestyle', 'var') && (strcmpi(linestyle, 'scatter') || strcmpi(linest
 	scatter(maze(:, 1), maze(:, 2), 2, mazecolor, 'filled');
 else
 	if exist('linestyle', 'var')
-		plot(maze(:, 1), maze(:, 2), 'color', mazecolor, 'linestyle', linestyle);
+		h = plot(maze(:, 1), maze(:, 2), 'color', mazecolor, 'linestyle', linestyle);
 	else
-		plot(maze(:, 1), maze(:, 2), mazecolor);
+		h = plot(maze(:, 1), maze(:, 2), mazecolor);
 	end
 end
 

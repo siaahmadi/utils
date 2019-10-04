@@ -5,6 +5,7 @@ function overlaps = p___findOverlaps(Ivls)
 [~, I_b_inv] = sort(I_b); % b(I_b_inv) == original Begins
 [~, I_e_inv] = sort(I_e); % e(I_e_inv) == original Ends
 
+warning('Ivlset:Overlapp:Nonoptimization', 'The following line has not been optimized.')
 overlaps = arrayfun(@(x) auxFunc_findOverlap(b, e, I_b, I_e, I_b_inv, I_e_inv, x), 1:size(Ivls, 1), 'UniformOutput', false);
 
 function qIvl_overlaps_with = auxFunc_findOverlap(b, e, I_b, I_e, I_b_inv, I_e_inv, whichInterval)
