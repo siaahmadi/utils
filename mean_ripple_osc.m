@@ -17,6 +17,19 @@ function [ripples_at1sd, ripples_atxsd, ripple_osc_1sd, ripple_osc_xsd, ripple_o
 % ripple_osc_1sd_z : `tsd` object of the z-scored amplitude of ripples corresponding to `ripples_at1sd`
 % ripple_osc_xsd_z : `tsd` object of the z-scored amplitude of ripples corresponding to `ripples_atxsd`
 
+opt.SPIKE_PEAK_THRESHOLD = 100; % in micro-volts
+opt.MAX_L_INFINITY_NORM_OF_PEAKS = 20;
+MUA_STD_THRESHOLD = 4;
+MUA_BIN_SIZE = 0.01;
+
+valid_spikes = cell(12, 1);
+for i = 1:12
+	valid_spikes{i} = extract_valid_spikes_from_ntt(pathToSession, ['TT', num2str(i), '.ntt'], opt);
+end
+MUA = cat(2, valid_spikes{:})';
+
+MUA_rate = histcounts(MUA, min(MUA):MUA_BIN_SIZE:max(MUA))/MUA_BIN_SIZE;
+MUA_on = MUA_rate > (mean(MUA_rate(MUA_rate>0)) + MUA_STD_THRESHOLD * std(MUA_rate(MUA_rate>0)));
 
 ripple_avg = [];
 nValid = 0;
@@ -75,3 +88,18 @@ for s = sd(:)'
 	ripple_osc_1sd{i, 1} = tsd(tdkw_1sd, ddkw_1sd);
 	ripple_osc_1sd_z{i, 1} = tsd(tdkw_1sd, ddkw_1sd_z);
 end
+
+function valid_spikes = extract_valid_spikes_from_ntt(pathToSession, ntt_file_name, opt)
+
+
+[TS, Samples, Header] = Nlx2MatSpike( fullfile(pathToSession, ntt_file_name), [1 0 0 0 1], 1, 1, 0);
+TS = TS * 1e-6;
+adbitvolts = nlx.extract_adbitvolt(Header);
+for i = 1:length(adbitvolts)
+	Samples(:, i, :) = Samples(:, i, :) * adbitvolts(i) * 1e6; % will be micro-volts
+end
+suprathreshold = any(squeeze(max(Samples, [], 1) > opt.SPIKE_PEAK_THRESHOLD), 1);
+peaks = squeeze(Samples(8, :, :));
+idx_valid_ch = cellfun(@(x) any(x(:)~=0), mat2cell(Samples, 32, [1,1,1,1], size(Samples,3))); % if the channel is all 0's it was probably broken or turned off
+diagonal_idx = max(abs(peaks(idx_valid_ch, :) - repmat(mean(peaks(idx_valid_ch, :), 1), sum(idx_valid_ch), 1))) < opt.MAX_L_INFINITY_NORM_OF_PEAKS;
+valid_spikes = TS(suprathreshold & ~diagonal_idx);
